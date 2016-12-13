@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=False, epsilon=0.0, alpha=0.0):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -25,7 +25,7 @@ class LearningAgent(Agent):
         # Set any additional class parameters as needed
 
 
-    def reset(self, destination=None, testing=False):
+    def reset(self, destination=None, testing=True):
         """ The reset function is called at the beginning of each trial.
             'testing' is set to True if testing trials are being used
             once training trials have completed. """
@@ -167,6 +167,7 @@ def run():
     # Flags:
     #   enforce_deadline - set to True to enforce a deadline metric
     env.set_primary_agent(agent)
+    env.enforce_deadline = True
 
     ##############
     # Create the simulation
@@ -176,6 +177,8 @@ def run():
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
     sim = Simulator(env)
+    sim.update_delay = 0.01
+    sim.log_metrics = True
 
     ##############
     # Run the simulator
@@ -183,6 +186,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
     sim.run()
+    sim.n_test = 10
 
 
 if __name__ == '__main__':
