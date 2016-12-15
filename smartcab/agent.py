@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=False, epsilon=0.0, alpha=0.0):
+    def __init__(self, env, learning=True, epsilon=0.0, alpha=0.0):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -60,7 +60,9 @@ class LearningAgent(Agent):
         #   If it is not, create a dictionary in the Q-table for the current 'state'
         #   For each action, set the Q-value for the state-action pair to 0
 
-        state = None
+        state = (waypoint,inputs['light'],inputs['oncoming'],inputs['right'],inputs['left'])
+        if not state in self.Q:
+        	self.Q[state]={key: 0 for key in self.valid_actions}
 
         return state
 
@@ -74,7 +76,7 @@ class LearningAgent(Agent):
         ###########
         # Calculate the maximum Q-value of all actions for a given state
 
-        maxQ = None
+        maxQ = max(self.Q[state].values())
 
         return maxQ
 
@@ -110,6 +112,11 @@ class LearningAgent(Agent):
 
         if not self.learning:
             action = random.choice(self.valid_actions)
+        else:
+        	if random.uniform(0, 1) < self.epsilon:
+        		action = random.choice(self.valid_actions)
+        	else:
+        		action = max(self.Q[self.state], key=lambda k: self.Q[self.state][k])
 
         return action
 
@@ -176,7 +183,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True)
+    sim = Simulator(env, update_delay=1, log_metrics=False)
 
     ##############
     # Run the simulator
