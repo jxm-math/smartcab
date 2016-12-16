@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=True, epsilon=0.0, alpha=0.0):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.5):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -18,6 +18,7 @@ class LearningAgent(Agent):
         self.Q = dict()          # Create a Q-table which will be a dictionary of tuples
         self.epsilon = epsilon   # Random exploration factor
         self.alpha = alpha       # Learning factor
+        self.t = 0
 
         ###########
         ## TO DO ##
@@ -39,6 +40,13 @@ class LearningAgent(Agent):
         # Update epsilon using a decay function of your choice
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
+
+        self.t += 1
+        self.epsilon = 1/float(self.t) # It will make 100 training trials
+
+        if testing:
+            self.epsilon=0
+            self.alpha=0
 
         return None
 
@@ -91,7 +99,10 @@ class LearningAgent(Agent):
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
 
-        return
+        if not state in self.Q:
+            self.Q[state]={key: 0 for key in self.valid_actions}
+
+        return None
 
 
     def choose_action(self, state):
@@ -132,7 +143,10 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
 
-        return
+        if self.learning:
+            self.Q[state][action] += self.alpha*(reward-self.Q[state][action])
+
+        return None
 
 
     def update(self):
@@ -173,8 +187,7 @@ def run():
     # Follow the driving agent
     # Flags:
     #   enforce_deadline - set to True to enforce a deadline metric
-    env.set_primary_agent(agent)
-    env.enforce_deadline = True
+    env.set_primary_agent(agent, enforce_deadline = True)
 
     ##############
     # Create the simulation
@@ -183,15 +196,15 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=1, log_metrics=False)
+    sim = Simulator(env, update_delay=0.1, log_metrics=True, optimized=True)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test = 10)
-    
+    sim.run(n_test = 20, tolerance=0.01)
+
 
 
 if __name__ == '__main__':
