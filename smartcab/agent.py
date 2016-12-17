@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.7):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -42,7 +42,7 @@ class LearningAgent(Agent):
         # If 'testing' is True, set epsilon and alpha to 0
 
         self.t += 1
-        self.epsilon = 1/float(self.t) # It will make 100 training trials
+        self.epsilon = 1/float(math.sqrt(self.t))
 
         if testing:
             self.epsilon=0
@@ -68,9 +68,9 @@ class LearningAgent(Agent):
         #   If it is not, create a dictionary in the Q-table for the current 'state'
         #   For each action, set the Q-value for the state-action pair to 0
 
-        state = (waypoint,inputs['light'],inputs['oncoming'],inputs['right'],inputs['left'])
+        state = (waypoint,inputs['light'],inputs['oncoming'],inputs['left'])
         if not state in self.Q:
-        	self.Q[state]={key: 0 for key in self.valid_actions}
+            self.Q[state]={key: 0 for key in self.valid_actions}
 
         return state
 
@@ -124,10 +124,12 @@ class LearningAgent(Agent):
         if not self.learning:
             action = random.choice(self.valid_actions)
         else:
-        	if random.uniform(0, 1) < self.epsilon:
-        		action = random.choice(self.valid_actions)
-        	else:
-        		action = max(self.Q[self.state], key=lambda k: self.Q[self.state][k])
+            if random.uniform(0, 1) < self.epsilon:
+                action = random.choice(self.valid_actions)
+            else:
+                optQ = self.get_maxQ(state)
+                states_optQ = [ k for k in self.Q[state].keys() if self.Q[state][k] == optQ ]
+                action = random.choice(states_optQ)
 
         return action
 
@@ -196,14 +198,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.1, log_metrics=True, optimized=True)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True, display=False)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test = 20, tolerance=0.01)
+    sim.run(n_test = 20, tolerance=0.02)
 
 
 
